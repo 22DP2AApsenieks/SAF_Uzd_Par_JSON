@@ -1,0 +1,16 @@
+[
+    {
+        "name": "Python",
+        "type": "interpreted",
+        "year_created": 1991,
+        "creator": "Guido van Rossum",
+        "paradigm": "Object-oriented, imperative, functional"
+    },
+    {
+        "name": "Java",
+        "type": "compiled",
+        "year_created": 1995,
+        "creator": "James Gosling",
+        "paradigm": "Object-oriented"
+    }
+]

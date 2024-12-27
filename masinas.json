@@ -1,0 +1,15 @@
+[
+    {
+      "brand": "Toyota",
+      "model": "Corolla",
+      "color": "Silver",
+      "year_manufactured": 2018
+    },
+    {
+      "brand": "BMW",
+      "model": "X5",
+      "color": "Black",
+      "year_manufactured": 2020
+    }
+  ]
+  

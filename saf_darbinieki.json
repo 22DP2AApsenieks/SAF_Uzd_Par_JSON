@@ -1,0 +1,29 @@
+{
+    "employees": [
+      {
+        "name": "Jānis Bērziņš",
+        "position": "Inženieris",
+        "email": "janis.berzins@saftehnika.com",
+        "phone": "+371 12345678"
+      },
+      {
+        "name": "Anna Kalniņa",
+        "position": "Projektu vadītāja",
+        "email": "anna.kalnina@saftehnika.com",
+        "phone": "+371 87654321"
+      },
+      {
+        "name": "Pēteris Ozols",
+        "position": "IT speciālists",
+        "email": "peteris.ozols@saftehnika.com",
+        "phone": "+371 11223344"
+      },
+      {
+        "name": "Ilze Liepiņa",
+        "position": "Mārketinga speciāliste",
+        "email": "ilze.liepina@saftehnika.com",
+        "phone": "+371 99887766"
+      }
+    ]
+  }
+  

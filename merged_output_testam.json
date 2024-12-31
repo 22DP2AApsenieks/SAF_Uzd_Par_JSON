@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Python",
+        "value": "Popular"
+    },
+    {
+        "name": "Java",
+        "value": "Widely Used"
+    },
+    {
+        "name": "Tesla",
+        "value": "Electric"
+    },
+    {
+        "name": "Toyota",
+        "value": "Hybrid"
+    },
+    {
+        "name": "John Doe",
+        "value": "Manager"
+    },
+    {
+        "name": "Jane Smith",
+        "value": "Engineer"
+    }
+]

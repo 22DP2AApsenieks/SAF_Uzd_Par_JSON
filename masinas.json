@@ -1,15 +1,10 @@
 [
     {
-      "brand": "Toyota",
-      "model": "Corolla",
-      "color": "Silver",
-      "year_manufactured": 2018
+        "name": "Tesla",
+        "value": "Electric"
     },
     {
-      "brand": "BMW",
-      "model": "X5",
-      "color": "Black",
-      "year_manufactured": 2020
+        "name": "Toyota",
+        "value": "Hybrid"
     }
-  ]
-  
+]

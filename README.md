@@ -4,7 +4,7 @@
 
 ## Priekšvārds
 
-Pēdējās nedēļas laikā es pildīju uzdevums "JSON formāta sintakses pārbaude un failu summēšana".
+Akciju sabiedrība "SAF TEHNIKA" pārbaudes darba uzdevuma praktikantam ietvaros, es pildīju uzdevums "JSON formāta sintakses pārbaude un failu summēšana".
 
 ### Uzdevuma laikā es
 
@@ -12,9 +12,9 @@ Pēdējās nedēļas laikā es pildīju uzdevums "JSON formāta sintakses pārba
 * Uzzināju par Json failu formātu
 * Mācījos savienot abus kopā un spēt(caur python) veikt darbības ar json failiem
     * Pārbaudīt, vai json failos ir kļūdas
-    * Apvienot vairākus json failus 1 ar prgrammas(python) paliīdzību
+    * Apvienot vairākus json failus vienā ar prgrammas(python) paliīdzību
 
-**Ja godīgi, šis uzdevums bija grūts, bet tomēr interesants. Esmu priecīgs par to, ka man tiešām ir sanācis.**
+**"Ja godīgi, šis uzdevums bija grūts, bet tomēr interesants. Esmu priecīgs par to, ka man tiešām ir sanācis."**
 
 
 
@@ -44,7 +44,7 @@ Pēdējās nedēļas laikā es pildīju uzdevums "JSON formāta sintakses pārba
 3.  Ir 3 faili: masinas.json, programmesanasval.json, saf_darbinieki2.json; Kurus programma apvienos merged_output_testam.json.
 4.  Ja tu vēlies, kautko mainīt failos, tad dodies uz 45 rindiņu un tur tu redzēsi dažādus failus. Interesantais manā programmā ir tas, ka tu failu vari mainīt kodā un pēctam (pec palaišanas) programma datus atjaunos, gan merg_outp_test gan konkrētajam failam, kura datus esi izmainījis
 
-** Izveidoju testu, kas pārbauda, vai neatkārtojas vien un tas pats vārds. Ja atkārtojas - izvada kļūdu **
+**Izveidoju testu, kas pārbauda, vai neatkārtojas vien un tas pats vārds. Ja atkārtojas - izvada kļūdu**
 
 Svarīgi - aizmirsu pieminēt, ka testi ir izveidoti katrai no programmām atsevisķi, iekšā tajās.
 

@@ -52,7 +52,7 @@ Svarīgi - aizmirsu pieminēt, ka testi ir izveidoti katrai no programmām atsev
 
 Zinu, būs nepilnības. Zinu, noteikti būs kautkas, ko varēja un vajadzēja darīt savādāk. Tomēr, esmu apmierināts ar rezultātu un, šo darbu veicot, es iemācījos ļoti daudz. Galvenais - man ari bija interesanti.
 
-#Atsauces
+# Atsauces
 Lai pabeigtu darbu meklēju info internetā
 * https://youtu.be/cj3h3Fb10QY?si=v58gK0Ticko5N_9o
 * https://www.w3schools.com/
@@ -67,6 +67,8 @@ Jautājuma gadījumos varat ar mani sazināties pa tel nr. 29770610
 
 Paldies par uzmanību!
 -Ādams
+
+P.S. atvainojos, par iespējamām interpunkcijas un ortugrāfijas kļūdām!
 
 
 

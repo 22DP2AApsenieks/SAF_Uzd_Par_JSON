@@ -42,8 +42,8 @@ def merge_json_files(file_names, output_file, conflict_resolution='overwrite'):
 def create_example_files(): #šeit es izveidoju piemēra json failu(kur ir 3 dažādi faili)
     example_files = {
         'programmesanasval.json': [
-            {"name": "Python", "value": "Popular"},
-            {"name": "Java", "value": "Widely Used"}
+            {"name": "Python", "value": "Popular"}, #(inf lietotajam)ja atkārtosies 2x vieni un tie paši vārdi(piem. java nomainīsi uz python), būs kļūda
+            {"name": "Java", "value": "Widely Used"} #kautko izmainot kādā no failiem šeit mainīsies gan merg_outp_test, gan konkrētais fails
         ],
         'masinas.json': [
             {"name": "Tesla", "value": "Electric"},

@@ -53,12 +53,13 @@ Svarīgi - aizmirsu pieminēt, ka testi ir izveidoti katrai no programmām atsev
 Zinu, būs nepilnības. Zinu, noteikti būs kautkas, ko varēja un vajadzēja darīt savādāk. Tomēr, esmu apmierināts ar rezultātu un, šo darbu veicot, es iemācījos ļoti daudz. Galvenais - man ari bija interesanti.
 
 #Atsauces
-Lai pabeigtu darbu meklēju info internetā(neskaitot jūsu iedoto saiti)
+Lai pabeigtu darbu meklēju info internetā
 * https://youtu.be/cj3h3Fb10QY?si=v58gK0Ticko5N_9o
 * https://www.w3schools.com/
 * https://chatgpt.com/
 * https://stackoverflow.blog/2022/06/02/a-beginners-guide-to-json-the-data-format-for-the-internet/
 * https://youtu.be/6tNS--WetLI?si=4xWEWGPJGVYFjSzk
+* +saite, kuru bijāt sūtījuši
 
 
 

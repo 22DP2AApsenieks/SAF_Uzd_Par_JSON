@@ -66,6 +66,7 @@ Lai pabeigtu darbu meklēju info internetā
 Jautājuma gadījumos varat ar mani sazināties pa tel nr. 29770610
 
 Paldies par uzmanību!
+
 -Ādams
 
 P.S. atvainojos, par iespējamām interpunkcijas un ortugrāfijas kļūdām!

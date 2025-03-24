@@ -1,5 +1,4 @@
-{
-    "employees": [
+[
       {
         "name": "Jānis Bērziņš",
         "position": "Inženieris",
@@ -24,5 +23,4 @@
         "email": "ilze.liepina@saftehnika.com",
         "phone": "+371 99887766"
       }
-    ]
-  }
+]

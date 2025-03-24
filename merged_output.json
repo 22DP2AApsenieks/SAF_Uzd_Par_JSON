@@ -1,68 +1,32 @@
 [
   [
     {
+      "name": "Python",
+      "value": "Popular"
+    },
+    {
+      "name": "Java",
+      "value": "Widely Used"
+    }
+  ],
+  [
+    {
+      "name": "John Doe",
+      "value": "Manager"
+    },
+    {
+      "name": "Jane Smith",
+      "value": "Engineer"
+    }
+  ],
+  [
+    {
       "name": "jdsdv",
       "value": "432"
     },
     {
       "name": "67534",
       "value": "ju"
-    }
-  ],
-  [
-    {
-      "name": "Tesla",
-      "value": "Electric"
-    },
-    {
-      "name": "Toyota",
-      "value": "Hybrid"
-    }
-  ],
-  [
-    {
-      "name": "Python",
-      "value": "Popular"
-    },
-    {
-      "name": "Java",
-      "value": "Widely Used"
-    },
-    {
-      "name": "Tesla",
-      "value": "Electric"
-    },
-    {
-      "name": "Toyota",
-      "value": "Hybrid"
-    },
-    {
-      "name": "John Doe",
-      "value": "Manager"
-    },
-    {
-      "name": "Jane Smith",
-      "value": "Engineer"
-    }
-  ],
-  [
-    {
-      "name": "Python",
-      "value": "Popular"
-    },
-    {
-      "name": "Java",
-      "value": "Widely Used"
-    }
-  ],
-  [
-    {
-      "name": "John Doe",
-      "value": "Manager"
-    },
-    {
-      "name": "Jane Smith",
-      "value": "Engineer"
     }
   ]
 ]

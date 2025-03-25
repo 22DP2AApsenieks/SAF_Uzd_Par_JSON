@@ -3,11 +3,11 @@ import argparse
 import json
 import os
 import sys
-from typing import Any, Union, List, Dict
+from typing import Any, Union, List, Dict, Set
 
 # Constants
 DEFAULT_OUTPUT = "merged.json"
-SUPPORTED_COMMANDS = ['merge', 'overwrite']
+SUPPORTED_COMMANDS = ['merge', 'overwrite', 'deepmerge']
 JSON_EXTENSIONS = ('.json',)
 
 def enforce_json_extension(filename: str) -> str:
@@ -20,42 +20,62 @@ def get_json_files() -> List[str]:
     return [f for f in os.listdir() if f.lower().endswith(JSON_EXTENSIONS)]
 
 def load_json_file(file_path: str) -> Union[list, dict]:
-    """Load JSON file with automatic encoding detection"""
+    """Load JSON file with advanced encoding detection and error handling"""
     encodings = ['utf-8', 'utf-16', 'windows-1257', 'latin1']
     
     for encoding in encodings:
         try:
             with open(file_path, 'r', encoding=encoding) as f:
                 return json.load(f)
-        except (UnicodeDecodeError, json.JSONDecodeError):
+        except UnicodeDecodeError:
             continue
-    raise ValueError(f"Could not decode {file_path}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in {file_path}: {e}")
+        except Exception as e:
+            raise IOError(f"Error reading {file_path}: {e}")
+    
+    raise ValueError(f"Could not decode {file_path} with tried encodings")
 
 def save_json(data: Any, filename: str) -> None:
-    """Save data to JSON file"""
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    """Save data to JSON file with atomic write"""
+    temp_file = f"{filename}.tmp"
+    try:
+        with open(temp_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(temp_file, filename)
+    except Exception as e:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+        raise e
 
 def deep_merge(base: Any, new: Any, mode: str = 'merge') -> Any:
-    """Merge data while handling lists and dicts"""
+    """Enhanced deep merge with configurable strategies"""
+    if mode == 'deepmerge':
+        return _deep_merge_recursive(base, new)
     if mode == 'merge':
         return _merge_preserve(base, new)
-    elif mode == 'overwrite':
+    if mode == 'overwrite':
         return _merge_overwrite(base, new)
     return base
 
-def _merge_preserve(base: Any, new: Any) -> Any:
-    """Merge lists and dicts while preserving unique entries"""
-    if isinstance(base, list) and isinstance(new, list):
-        seen = {json.dumps(item, sort_keys=True) for item in base}
+def _deep_merge_recursive(base: Any, new: Any) -> Any:
+    """Deep merge strategy for complex nested structures"""
+    if isinstance(base, dict) and isinstance(new, dict):
         merged = base.copy()
-        for item in new:
-            item_str = json.dumps(item, sort_keys=True)
-            if item_str not in seen:
-                merged.append(item)
-                seen.add(item_str)
+        for key, value in new.items():
+            if key in merged:
+                merged[key] = _deep_merge_recursive(merged[key], value)
+            else:
+                merged[key] = value
         return merged
     
+    if isinstance(base, list) and isinstance(new, list):
+        return base + [item for item in new if item not in base]
+    
+    return new
+
+def _merge_preserve(base: Any, new: Any) -> Any:
+    """Merge preserving structure with duplicate detection"""
     if isinstance(base, dict) and isinstance(new, dict):
         merged = base.copy()
         for key, value in new.items():
@@ -65,155 +85,138 @@ def _merge_preserve(base: Any, new: Any) -> Any:
                 merged[key] = value
         return merged
     
-    return new if isinstance(base, type(new)) else base
-
-def _merge_overwrite(base: Any, new: Any) -> Any:
-    """Overwrite base data with new data"""
-    if isinstance(base, dict) and isinstance(new, dict):
+    if isinstance(base, list) and isinstance(new, list):
+        seen = _create_identity_set(base)
         merged = base.copy()
-        for key, value in new.items():
-            merged[key] = value
+        for item in new:
+            item_id = _get_item_identity(item)
+            if item_id not in seen:
+                merged.append(item)
+                seen.add(item_id)
         return merged
     
-    if isinstance(base, list) and isinstance(new, list):
-        return new  # Overwrite the list entirely
+    return new if _get_item_identity(base) != _get_item_identity(new) else base
+
+def _merge_overwrite(base: Any, new: Any) -> Any:
+    """Overwrite strategy with type preservation"""
+    if isinstance(base, dict) and isinstance(new, dict):
+        merged = base.copy()
+        merged.update(new)
+        return merged
     
     return new
 
-def copy_file(source: str, destination: str) -> None:
-    """Copy content from source file to destination file"""
-    try:
-        data = load_json_file(source)
-        save_json(data, destination)
-        print(f"Successfully copied {source} to {destination}")
-    except Exception as e:
-        print(f"Error copying {source} to {destination}: {e}")
+def _get_item_identity(item: Any) -> str:
+    """Create unique identifier for complex items"""
+    if isinstance(item, (dict, list)):
+        return json.dumps(item, sort_keys=True)
+    return str(item)
+
+def _create_identity_set(items: List[Any]) -> Set[str]:
+    """Create set of identity hashes"""
+    return {_get_item_identity(item) for item in items}
+
+def interactive_selector(prompt: str, options: List[str]) -> List[str]:
+    """Interactive selection of multiple options"""
+    print(f"\n{prompt}:")
+    for idx, option in enumerate(options, 1):
+        print(f"{idx}. {option}")
+    
+    while True:
+        choices = input("Enter selections (comma-separated or 'all'): ").strip()
+        if choices.lower() == 'all':
+            return options
+        
+        try:
+            indices = [int(idx.strip()) - 1 for idx in choices.split(',')]
+            return [options[i] for i in indices]
+        except (ValueError, IndexError):
+            print("Invalid input. Please try again.")
 
 def interactive_merge():
-    """Interactive merging workflow with user prompts."""
+    """Enhanced interactive merging workflow"""
     files = get_json_files()
     if not files:
-        print("No JSON files found in the current directory.")
+        print("No JSON files found in current directory.")
         return
-
-    print("Available JSON files:")
-    for idx, file in enumerate(files, 1):
-        print(f"{idx}. {file}")
-
-    try:
-        file_indices = input("\nEnter input files separated by commas (e.g., 1,3): ")
-        selected_indices = [int(idx.strip()) - 1 for idx in file_indices.split(',')]
-        selected_files = [files[idx] for idx in selected_indices]
-    except (ValueError, IndexError):
-        print("Invalid selection. Please ensure you enter valid numbers corresponding to the files.")
+    
+    selected_files = interactive_selector("Available JSON files", files)
+    if not selected_files:
+        print("No files selected.")
         return
-
-    print("\nSelect the operation:")
-    print("1. Merge (combine)")
-    print("2. Overwrite (replace existing data with new data)")
-    try:
-        operation_choice = int(input("Enter 1 or 2: "))
-        if operation_choice == 1:
-            mode = 'merge'
-        elif operation_choice == 2:
-            mode = 'overwrite'
-        else:
-            print("Invalid choice. Defaulting to 'merge'.")
-            mode = 'merge'
-    except ValueError:
-        print("Invalid input. Defaulting to 'merge'.")
-        mode = 'merge'
-
+    
     output_file = input(f"\nEnter output filename (default: {DEFAULT_OUTPUT}): ").strip()
     output_file = enforce_json_extension(output_file or DEFAULT_OUTPUT)
-
-    # Load existing data if the output file exists
-    combined = []
+    
+    # Load existing data
+    base_data = {}
     if os.path.exists(output_file):
         try:
-            existing_data = load_json_file(output_file)
-            if isinstance(existing_data, list):
-                combined.extend(existing_data)
-            elif isinstance(existing_data, dict):
-                combined.append(existing_data)
+            base_data = load_json_file(output_file)
             print(f"Loaded existing data from {output_file}")
         except Exception as e:
             print(f"Error loading existing file: {e}")
+            if input("Continue without existing data? (y/n): ").lower() != 'y':
+                return
 
-    # Load and merge selected files
+    # Merge strategy selection
+    strategies = {
+        '1': ('merge', 'Combine data preserving existing structure'),
+        '2': ('overwrite', 'Replace existing values with new data'),
+        '3': ('deepmerge', 'Deep merge nested structures')
+    }
+    
+    print("\nSelect merge strategy:")
+    for key, (_, desc) in strategies.items():
+        print(f"{key}. {desc}")
+    
+    strategy = strategies.get(input("Your choice (1-3): "), strategies['1'])[0]
+
+    # Process files
+    merged_data = base_data
     for file in selected_files:
         try:
-            file_data = load_json_file(file)
-            if isinstance(file_data, list):
-                combined.extend(file_data)
-            elif isinstance(file_data, dict):
-                combined.append(file_data)
-            print(f"✓ Loaded {file}")
+            new_data = load_json_file(file)
+            merged_data = deep_merge(merged_data, new_data, strategy)
+            print(f"✓ Processed {file}")
         except Exception as e:
-            print(f"✕ Error reading {file}: {e}")
+            print(f"✕ Error processing {file}: {e}")
 
-    # Remove duplicates if merging
-    if mode == 'merge':
-        seen = set()
-        merged = []
-        for item in combined:
-            item_hash = json.dumps(item, sort_keys=True)
-            if item_hash not in seen:
-                seen.add(item_hash)
-                merged.append(item)
-        combined = merged
-
-    # Save the merged data
+    # Save result
     try:
-        save_json(combined, output_file)
+        save_json(merged_data, output_file)
         print(f"\nSuccessfully saved merged data to {output_file}")
     except Exception as e:
         print(f"Error saving file: {e}")
 
-
 def handle_command_line(args):
-    """Handle command line mode for merge, overwrite, or copy"""
+    """Command line interface handler"""
     output_file = enforce_json_extension(args.output)
 
-    if args.command == "copy":
-        if len(args.files) != 2:
-            print("Error: You must provide exactly 2 files for the copy command.")
-            sys.exit(1)
-        source, destination = args.files
-        copy_file(source, destination)
-    else:
+    try:
         # Load or initialize base data
-        try:
-            if os.path.exists(output_file):
-                base = load_json_file(output_file)
-                if not isinstance(base, (list, dict)):
-                    raise ValueError("Existing file must be JSON list or object")
-            else:
-                base = []
-        except Exception as e:
-            print(f"Error loading existing file: {e}", file=sys.stderr)
-            sys.exit(1)
-
+        base = load_json_file(output_file) if os.path.exists(output_file) else {}
+        
         for file in args.files:
-            try:
-                new_data = load_json_file(file)
-                base = deep_merge(base, new_data, args.command)
-                print(f"Processed {file}")
-            except Exception as e:
-                print(f"Error processing {file}: {e}", file=sys.stderr)
-                sys.exit(1)
-
-        try:
-            save_json(base, output_file)
-            print(f"Successfully saved to {output_file}")
-        except Exception as e:
-            print(f"Save failed: {e}", file=sys.stderr)
-            sys.exit(1)
+            new_data = load_json_file(file)
+            base = deep_merge(base, new_data, args.command)
+            print(f"Processed {file}")
+        
+        save_json(base, output_file)
+        print(f"Successfully saved to {output_file}")
+    
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="JSON File Manager with merge/overwrite/copy capabilities",
-        usage="%(prog)s [-i] [-f FILES...] [-o OUTPUT] [-c COMMAND]"
+        description="Advanced JSON File Manager",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="Merge strategies:\n"
+               "  merge: Preserve structure, remove duplicates\n"
+               "  overwrite: Replace existing values\n"
+               "  deepmerge: Recursive merge of nested structures"
     )
     parser.add_argument('-i', '--interactive', action='store_true',
                        help="Run in interactive mode")
@@ -223,7 +226,7 @@ def main():
                        help=f"Output file name (default: {DEFAULT_OUTPUT})")
     parser.add_argument('-c', '--command', default='merge',
                        choices=SUPPORTED_COMMANDS,
-                       help="Operation mode (default: merge)")
+                       help="Merge strategy to use")
 
     args = parser.parse_args()
 

@@ -1,0 +1,68 @@
+[
+  [
+    {
+      "name": "jdsdv",
+      "value": "432"
+    },
+    {
+      "name": "67534",
+      "value": "ju"
+    }
+  ],
+  [
+    {
+      "name": "Tesla",
+      "value": "Electric"
+    },
+    {
+      "name": "Toyota",
+      "value": "Hybrid"
+    }
+  ],
+  [
+    [
+      {
+        "name": "Python",
+        "value": "Popular"
+      },
+      {
+        "name": "Java",
+        "value": "Widely Used"
+      }
+    ],
+    [
+      {
+        "name": "John Doe",
+        "value": "Manager"
+      },
+      {
+        "name": "Jane Smith",
+        "value": "Engineer"
+      }
+    ]
+  ],
+  {
+    "name": "Janis Berzins",
+    "position": "Inzenieris",
+    "email": "janis.berzins@saftehnika.com",
+    "phone": "+371 12345678"
+  },
+  {
+    "name": "Anna Kalnina",
+    "position": "Projektu vaditaja",
+    "email": "anna.kalnina@saftehnika.com",
+    "phone": "+371 87654321"
+  },
+  {
+    "name": "Peteris Ozols",
+    "position": "IT specialists",
+    "email": "peteris.ozols@saftehnika.com",
+    "phone": "+371 11223344"
+  },
+  {
+    "name": "Ilze Liepina",
+    "position": "Marketinga speciliste",
+    "email": "ilze.liepina@saftehnika.com",
+    "phone": "+371 99887766"
+  }
+]

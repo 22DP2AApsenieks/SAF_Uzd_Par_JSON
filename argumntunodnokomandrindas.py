@@ -61,10 +61,10 @@ def process_command_line(args):
         
         try:
             with open(args.output, "w", encoding="utf-8") as f:
-                json.dump(merged, f, indent=4, ensure_ascii=False)
+                json.dump(merged, f, indent=4, ensure_ascii=False) #f=izvelata faila obj
                 f.flush()  # Piespiež rakstīšanu buferī
                 os.fsync(f.fileno())  # Piespiež rakstīšanu diskā
-            print(f"APVIENOŠANA VEIKSMĪGA: {args.input} → {args.output}")
+            print(f"APVIENOŠANA VEIKSMĪGA: {args.input} uz {args.output}")
         except Exception as e:
             print(f"KĻŪDA: Nevarēja saglabāt {args.output}: {str(e)}")
             sys.exit(1)
@@ -202,3 +202,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# 

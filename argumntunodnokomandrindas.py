@@ -3,15 +3,16 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import MutableMapping
 
 def merge_json(a, b):
     """
-    Rekursīvi apvieno divus JSON objektus/dictionaries vai arrays.
-    Ja diviem dictionaries atbilst vienādi atslēgas, tiek veikta rekursīva apvienošana.
-    Ja divām arrays ir kopīgas vērtības, tās netiek dubļotas.
-    Ja datu tipi neatbilst, otrā vērtība pārraksta pirmo.
+    Rekursīvi apvieno divus JSON objektus/dictionaries.
+    - Dziļi apvieno vārdnīcas
+    - Apvieno sarakstus, izvairoties no dublikātiem
+    - Saglabā esošos datus, ja struktūras nesakrīt
     """
-    if isinstance(a, dict) and isinstance(b, dict):
+    if isinstance(a, MutableMapping) and isinstance(b, MutableMapping):
         result = a.copy()
         for key, value in b.items():
             if key in result:
@@ -20,143 +21,184 @@ def merge_json(a, b):
                 result[key] = value
         return result
     elif isinstance(a, list) and isinstance(b, list):
-        result = a.copy()
+        # Pārbauda dublikātus pēc satura (nevis atsauces)
+        existing = {json.dumps(item, sort_keys=True) for item in a}
+        combined = a.copy()
         for item in b:
-            if item not in result:
-                result.append(item)
-        return result
+            if json.dumps(item, sort_keys=True) not in existing:
+                combined.append(item)
+        return combined
     else:
-        # Ja tipi nesakrīt, izmanto jauno vērtību (overwrite)
-        return b
+        # Saglabā esošos datus, ja tipi nesakrīt
+        return a if a is not None else b
 
 def process_command_line(args):
-    """Apstrad.  merge vai overwrite."""
+    """Apstrādā komandrindas argumentus"""
+    # Validācija pirms apstrādes
+    if not os.path.exists(args.input):
+        print(f"KĻŪDA: Ievades fails {args.input} neeksistē!")
+        sys.exit(1)
+
     try:
         with open(args.input, "r", encoding="utf-8") as f:
             data_input = json.load(f)
     except Exception as e:
-        print("Kļūda ielādējot ievades failu:", e)
+        print(f"KĻŪDA: Nevarēja nolasīt {args.input}: {str(e)}")
         sys.exit(1)
-        
+
     if args.operation.lower() == "merge":
-        # Ja izvades fails eksistē, ielādē esošo saturu, citādi sāk ar tukšu objektu.
+        # Ielādē esošos datus, ja fails eksistē
+        data_output = {}
         if os.path.exists(args.output):
             try:
                 with open(args.output, "r", encoding="utf-8") as f:
                     data_output = json.load(f)
             except Exception as e:
-                print("Kļūda ielādējot izvades failu:", e)
-                data_output = {}
-        else:
-            data_output = {}
-        merged = merge_json(data_output, data_input)
-        with open(args.output, "w", encoding="utf-8") as f:
-            json.dump(merged, f, indent=4, ensure_ascii=False)
-        print("Apvienotā informācija saglabāta failā", args.output)
+                print(f"Brīdinājums: Nevarēja ielādēt {args.output}: {str(e)}")
+                print("Turpinām ar tukšu bāzi...")
         
+        merged = merge_json(data_output, data_input)
+        
+        try:
+            with open(args.output, "w", encoding="utf-8") as f:
+                json.dump(merged, f, indent=4, ensure_ascii=False)
+                f.flush()  # Piespiež rakstīšanu buferī
+                os.fsync(f.fileno())  # Piespiež rakstīšanu diskā
+            print(f"APVIENOŠANA VEIKSMĪGA: {args.input} → {args.output}")
+        except Exception as e:
+            print(f"KĻŪDA: Nevarēja saglabāt {args.output}: {str(e)}")
+            sys.exit(1)
+
     elif args.operation.lower() == "overwrite":
-        with open(args.output, "w", encoding="utf-8") as f:
-            json.dump(data_input, f, indent=4, ensure_ascii=False)
-        print("Ievades fails pārrakstīts uz", args.output)
-    else:
-        print("Neatpazīta operācija. Lūdzu, izmanto 'merge' vai 'overwrite'.")
-        sys.exit(1)
+        # PILNĪGA PĀRRAKSTĪŠANA ar papildu validāciju
+        try:
+            # Pārbauda, vai ievade ir derīgs JSON objekts
+            if not isinstance(data_input, (dict, list)):
+                print("KĻŪDA: Ievadei jābūt JSON objektam vai masīvam!")
+                sys.exit(1)
+                
+            with open(args.output, "w", encoding="utf-8", errors="strict") as f:
+                json.dump(data_input, f, indent=4, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            print(f"PĀRRAKSTĪŠANA VEIKSMĪGA: {args.input} → {args.output}")
+            
+            # Pārbauda, vai fails faktiski tika ierakstīts
+            if os.path.getsize(args.output) == 0:
+                print("BRĪDINĀJUMS: Izvades fails ir tukšs!")
+        except Exception as e:
+            print(f"KĻŪDA: Neizdevās pārrakstīt {args.output}: {str(e)}")
+            sys.exit(1)
 
 def list_json_files():
-    """Atrod un izvada sarakstu ar pašreizējā direktorijā esošajiem .json failiem."""
-    files = [f for f in os.listdir(".") if f.endswith(".json")]
-    if files:
-        print("Pieejamie json faili:")
-        for i, f in enumerate(files):
-            print(f"  {i+1}. {f}")
-    else:
-        print("Nav pieejamu json failu.")
-    return files
+    """Atgriež .json failu sarakstu pašreizējā direktorijā"""
+    return [f for f in os.listdir(".") 
+            if f.endswith(".json") and os.path.isfile(f)]
 
 def interactive_mode():
-    """Interaktīvais režīms, kur lietotājam tiek piedāvātas opcijas darbībām ar JSON failiem."""
+    """Interaktīvais režīms"""
     while True:
-        print("\nIzvēlies opciju:")
-        print("  1. Izveidot json")
-        print("  2. Apvienot (merge json)")
-        print("  3. Izdzēst json")
-        print("  4. Izbeigt interaktīvo režīmu")
-        choice = input("Tavs izvēle: ").strip()
+        print("\n=== JSON RĪKS ===")
+        print("1. Izveidot JSON")
+        print("2. Apvienot JSON")
+        print("3. Izdzēst JSON")
+        print("4. Iziet")
+        
+        choice = input("Izvēle (1-4): ").strip()
         
         if choice == "1":
-            list_json_files()
-            filename = input("Ievadi jauna json faila nosaukumu (piem., new.json): ").strip()
-            content = input("Ievadi json saturu (piem., {} vai derīgu json tekstu): ").strip()
-            try:
-                data = json.loads(content)
-            except Exception as e:
-                print("Nederīgs json saturs. Kļūda:", e)
-                continue
-            try:
-                with open(filename, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=4, ensure_ascii=False)
-                print("Fails", filename, "izveidots.")
-            except Exception as e:
-                print("Kļūda saglabājot failu:", e)
+            files = list_json_files()
+            if files:
+                print("\nEsošie faili:")
+                for i, f in enumerate(files, 1):
+                    print(f"{i}. {f}")
+                    
+            filename = input("\nJauna faila nosaukums: ").strip()
+            if not filename.endswith(".json"):
+                filename += ".json"
                 
+            try:
+                content = input("JSON saturs (tukšs = {}): ").strip() or "{}"
+                data = json.loads(content)
+                with open(filename, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=4)
+                print(f"Fails {filename} izveidots!")
+            except Exception as e:
+                print(f"Kļūda: {str(e)}")
+
         elif choice == "2":
             files = list_json_files()
             if len(files) < 2:
-                print("Nepietiekama json failu skaits merge operācijai (vajag vismaz 2 failus).")
+                print("Nepietiek failu!")
                 continue
-            base_file = input("Ievadi bāzes faila nosaukumu (kurš tiks papildināts): ").strip()
-            merge_file = input("Ievadi faila nosaukumu, kuru apvienot ar bāzes failu: ").strip()
-            try:
-                with open(base_file, "r", encoding="utf-8") as f:
-                    data_base = json.load(f)
-                with open(merge_file, "r", encoding="utf-8") as f:
-                    data_merge = json.load(f)
-            except Exception as e:
-                print("Kļūda ielādējot failus:", e)
-                continue
-            merged = merge_json(data_base, data_merge)
-            output_file = input("Ievadi jauna faila nosaukumu, kur saglabāt rezultātu: ").strip()
-            try:
-                with open(output_file, "w", encoding="utf-8") as f:
-                    json.dump(merged, f, indent=4, ensure_ascii=False)
-                print("Merge operācija veiksmīgi pabeigta, rezultāts saglabāts failā", output_file)
-            except Exception as e:
-                print("Kļūda saglabājot failu:", e)
                 
+            print("\nPieejamie faili:")
+            for i, f in enumerate(files, 1):
+                print(f"{i}. {f}")
+                
+            try:
+                src_idx = int(input("Izvēlies avota failu (nr): ")) - 1
+                dst_idx = int(input("Izvēlies mērķa failu (nr): ")) - 1
+                src_file = files[src_idx]
+                dst_file = files[dst_idx]
+                
+                with open(src_file, "r", encoding="utf-8") as f:
+                    src_data = json.load(f)
+                with open(dst_file, "r", encoding="utf-8") as f:
+                    dst_data = json.load(f)
+                    
+                merged = merge_json(dst_data, src_data)
+                
+                with open(dst_file, "w", encoding="utf-8") as f:
+                    json.dump(merged, f, indent=4)
+                print("Apvienošana veiksmīga!")
+            except Exception as e:
+                print(f"Kļūda: {str(e)}")
+
         elif choice == "3":
             files = list_json_files()
-            file_to_delete = input("Ievadi dzēšamā json faila nosaukumu: ").strip()
-            if os.path.exists(file_to_delete):
-                try:
-                    os.remove(file_to_delete)
-                    print("Fails", file_to_delete, "dzēsts.")
-                except Exception as e:
-                    print("Kļūda dzēšot failu:", e)
-            else:
-                print("Fails netika atrasts.")
+            if not files:
+                print("Nav failu!")
+                continue
                 
+            print("\nPieejamie faili:")
+            for i, f in enumerate(files, 1):
+                print(f"{i}. {f}")
+                
+            try:
+                del_idx = int(input("Izvēlies dzēšamo failu (nr): ")) - 1
+                target = files[del_idx]
+                if input(f"Dzēst {target}? (jā/nē): ").lower() == "jā":
+                    os.remove(target)
+                    print("Fails dzēsts!")
+            except Exception as e:
+                print(f"Kļūda: {str(e)}")
+
         elif choice == "4":
-            print("Izbeigt interaktīvo režīmu.")
             break
+
         else:
-            print("Nederīga izvēle. Lūdzu, mēģini vēlreiz.")
+            print("Nepareiza izvēle!")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Primitīva JSON operāciju programma (merge/overwrite) ar interaktīvo režīmu."
+        description="JSON apstrādes rīks ar drošu pārrakstīšanu un apvienošanu",
+        epilog="Piemērs: ./script.py -c overwrite -f modem.json -o config.json"
     )
-    parser.add_argument("-i", "--interactive", action="store_true", help="Palaist programmu interaktīvā režīmā")
-    parser.add_argument("-c", "--operation", type=str, help="Operācija: merge vai overwrite")
-    parser.add_argument("-f", "--input", type=str, help="Ievades faila nosaukums")
-    parser.add_argument("-o", "--output", type=str, help="Izvades faila nosaukums")
+    parser.add_argument("-i", "--interactive", action="store_true", help="Interaktīvais režīms")
+    parser.add_argument("-c", "--operation", choices=["merge", "overwrite"], help="Darbība: merge vai overwrite")
+    parser.add_argument("-f", "--input", help="Ievades fails")
+    parser.add_argument("-o", "--output", help="Izvades fails")
+    
     args = parser.parse_args()
-
+    
     if args.interactive:
         interactive_mode()
-    elif args.operation and args.input and args.output:
+    elif all([args.operation, args.input, args.output]):
         process_command_line(args)
     else:
         parser.print_help()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

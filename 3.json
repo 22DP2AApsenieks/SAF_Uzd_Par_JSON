@@ -1,0 +1,19 @@
+{
+"radio": {
+  "Status" : {
+	"tx_freq"				: "1000",
+	"rx_freq"				: "1000",
+	"power"					: "10",
+	"side"					: "1",
+	"duplex_shift"			: "1000",
+
+	"atpc_enabled"			: "1",
+	"atpc_delay"			: "10",
+	"atpc_delta"			: "10",
+	"atpc_correction_limit"	: "10",
+	"atpc_rxmin"			: "10",
+	"atpc_rxmax"			: "10"
+   }
+}
+}
+
